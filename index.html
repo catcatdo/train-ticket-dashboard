@@ -53,17 +53,7 @@
     <h1>열차표 대시보드</h1>
     <div class="sub">Google Sheet 자동 연동 · 모바일 대응</div>
 
-    <div class="card row">
-      <div><div class="k">총 건수</div><div class="v" id="total">-</div></div>
-      <div><div class="k">다음 일정</div><div class="v" id="next">-</div></div>
-      <div><div class="k">출발역 종류</div><div class="v" id="fromCount">-</div></div>
-      <div><div class="k">도착역 종류</div><div class="v" id="toCount">-</div></div>
-    </div>
-
-    <div class="card tools">
-      <input id="q" placeholder="역/좌석 검색" />
-      <input id="dateFrom" type="date" />
-      <input id="dateTo" type="date" />
+    <div class="card tools" style="grid-template-columns:1fr">
       <button id="refresh">새로고침</button>
     </div>
 
@@ -128,29 +118,13 @@ function render(rows){
     `;
     tb.appendChild(card);
   });
-  document.getElementById('total').textContent=rows.length;
-  const today=new Date(); today.setHours(0,0,0,0);
-  const next=rows
-    .map(r=>({r,d:toDate(r['날짜'])}))
-    .filter(x=>x.d && x.d>=today)
-    .sort((a,b)=>a.d-b.d)[0];
-  document.getElementById('next').textContent=next?`${next.r['날짜']} ${next.r['출발역']}→${next.r['도착역']}`:'-';
-  document.getElementById('fromCount').textContent=new Set(rows.map(r=>r['출발역']).filter(Boolean)).size;
-  document.getElementById('toCount').textContent=new Set(rows.map(r=>r['도착역']).filter(Boolean)).size;
+
 }
 
 function applyFilter(){
-  const q=(document.getElementById('q').value||'').toLowerCase();
-  const from=toDate(document.getElementById('dateFrom').value);
-  const to=toDate(document.getElementById('dateTo').value);
-  const out=all.filter(r=>{
-    const blob=Object.values(r).join(' ').toLowerCase();
-    if(q && !blob.includes(q)) return false;
-    const d=toDate(r['날짜']);
-    if(from && (!d || d<from)) return false;
-    if(to && (!d || d>to)) return false;
-    return true;
-  }).sort((a,b)=> (a['날짜']||'').localeCompare(b['날짜']||''));
+  const out=all
+    .slice()
+    .sort((a,b)=> (a['날짜']||'').localeCompare(b['날짜']||''));
   render(out);
 }
 
@@ -163,9 +137,6 @@ async function load(){
   applyFilter();
 }
 
-document.getElementById('q').addEventListener('input',applyFilter);
-document.getElementById('dateFrom').addEventListener('change',applyFilter);
-document.getElementById('dateTo').addEventListener('change',applyFilter);
 document.getElementById('refresh').addEventListener('click',load);
 load();
 setInterval(load, 10 * 60 * 1000);
