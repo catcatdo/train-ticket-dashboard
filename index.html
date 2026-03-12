@@ -56,16 +56,21 @@
       display:flex;
       justify-content:space-between;
       align-items:center;
-      padding:10px 14px;
+      min-height:72px;
+      padding:14px 16px;
       background:linear-gradient(90deg,#0b63b6,#0a5aa5);
       color:#fff;
       font-weight:800;
-      font-size:17px;
+      font-size:19px;
     }
     .ticket-head .head-right{
-      font-size:15px;
+      font-size:16px;
       opacity:.95;
     }
+
+    .ticket.dep-seoul .ticket-head{background:linear-gradient(90deg,#38bdf8,#0ea5e9)}
+    .ticket.dep-andong .ticket-head{background:linear-gradient(90deg,#fb923c,#f97316)}
+    .ticket.dep-gimcheon .ticket-head{background:linear-gradient(90deg,#facc15,#eab308); color:#1f2937}
 
     .ticket-body{padding:16px 16px 14px}
     .route{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 12px}
@@ -90,8 +95,8 @@
       .tools{grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:5;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:10px}
       #q{grid-column:1 / -1}
       #refresh{grid-column:1 / -1}
-      .ticket-head{font-size:15px;padding:9px 12px}
-      .ticket-head .head-right{font-size:13px}
+      .ticket-head{min-height:64px;font-size:16px;padding:12px 12px}
+      .ticket-head .head-right{font-size:14px}
       .ticket-body{padding:12px}
       .station{font-size:30px}
       .arrow{font-size:20px}
@@ -168,8 +173,16 @@ function render(rows){
     const dirClass = isUp ? 'up' : 'down';
     const isKg = from.includes('김천구미') || to.includes('김천구미');
 
+    const depClass = from.includes('서울')
+      ? 'dep-seoul'
+      : from.includes('안동')
+        ? 'dep-andong'
+        : from.includes('김천구미')
+          ? 'dep-gimcheon'
+          : '';
+
     const card=document.createElement('article');
-    card.className=`ticket ${dirClass}${isKg ? ' kg' : ''}`;
+    card.className=`ticket ${dirClass}${isKg ? ' kg' : ''} ${depClass}`;
     card.innerHTML = `
       <div class="ticket-head">
         <div>${dateWithWeekday(r['날짜'])}</div>
