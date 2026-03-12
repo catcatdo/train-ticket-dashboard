@@ -6,18 +6,34 @@
   <title>열차표 대시보드</title>
   <style>
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#0f172a;color:#e2e8f0}
-    .wrap{max-width:980px;margin:0 auto;padding:24px}
-    h1{margin:0 0 8px;font-size:28px}.sub{color:#94a3b8;margin-bottom:20px}
-    .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px;margin-bottom:14px}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    h1{margin:0 0 8px;font-size:28px}.sub{color:#94a3b8;margin-bottom:16px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px;margin-bottom:12px}
     .row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .k{font-size:12px;color:#9ca3af}.v{font-size:18px;font-weight:700}
-    .tools{display:flex;gap:8px;flex-wrap:wrap}
-    input,select{background:#0b1220;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:8px}
-    button{background:#2563eb;border:none;color:white;border-radius:8px;padding:8px 12px;cursor:pointer}
+    .k{font-size:12px;color:#9ca3af}.v{font-size:18px;font-weight:700;line-height:1.3}
+    .tools{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center}
+    input,select{background:#0b1220;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:10px;width:100%;min-width:0}
+    button{background:#2563eb;border:none;color:white;border-radius:8px;padding:10px 12px;cursor:pointer;white-space:nowrap}
     table{width:100%;border-collapse:collapse}
     th,td{border-bottom:1px solid #1f2937;padding:10px;text-align:left;font-size:14px}
     th{color:#93c5fd}
     a{color:#93c5fd}
+
+    @media (max-width: 760px){
+      .wrap{padding:12px}
+      h1{font-size:22px}
+      .row{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .v{font-size:16px}
+      .tools{grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:5;background:#111827;border-radius:12px;padding:10px}
+      #q{grid-column:1 / -1}
+      #refresh{grid-column:1 / -1}
+
+      thead{display:none}
+      table,tbody,tr,td{display:block;width:100%}
+      tr{background:#0b1220;border:1px solid #1f2937;border-radius:10px;padding:8px;margin-bottom:10px}
+      td{border-bottom:none;padding:6px 8px;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+      td::before{content:attr(data-label);color:#93c5fd;font-weight:600;flex-shrink:0}
+    }
   </style>
 </head>
 <body>
@@ -83,8 +99,12 @@ function render(rows){
   rows.forEach(r=>{
     const tr=document.createElement('tr');
     ['날짜','출발역','도착역','출발시간','도착시간','좌석','메모'].forEach(k=>{
-      const td=document.createElement('td'); td.textContent=r[k]||''; tr.appendChild(td);
-    }); tb.appendChild(tr);
+      const td=document.createElement('td');
+      td.setAttribute('data-label', k);
+      td.textContent=r[k]||'';
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
   });
   document.getElementById('total').textContent=rows.length;
   const today=new Date(); today.setHours(0,0,0,0);
