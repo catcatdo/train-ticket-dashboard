@@ -118,6 +118,7 @@
 <script>
 const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1WTfKa5KAAGv4Zt_uChB8eEir_W896TOXVimt51Mw4qA/export?format=csv&gid=0';
 let all=[];
+let ledMessage='';
 
 function parseCSV(text){
   const lines=[];let cur='';let row=[];let q=false;
@@ -153,15 +154,7 @@ function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
   const tbd=document.getElementById('rowsTable'); tbd.innerHTML='';
   const led=document.getElementById('ledTrack');
-  const ledItems = rows.slice(0, 12).map(r=>{
-    const d = dateWithWeekday(r['날짜']);
-    const from=(r['출발역']||'-').trim();
-    const to=(r['도착역']||'-').trim();
-    const st=(r['출발시간']||'-').trim();
-    const et=(r['도착시간']||'-').trim();
-    return `${d}  ${from}→${to}  ${st}-${et}`;
-  });
-  led.textContent = ledItems.length ? `✈ BOARDING INFO · ${ledItems.join('   ◆   ')}   ◆   ` : 'NO DATA';
+  led.textContent = ledMessage.trim() ? `✈ ${ledMessage.trim()}` : '✈ 환영합니다 · 열차표 대시보드';
 
   rows.forEach(r=>{
     const from=(r['출발역']||'').trim();
@@ -216,7 +209,9 @@ async function load(){
   const txt=await res.text();
   const lines=parseCSV(txt).filter(r=>r.some(x=>x&&x.trim()));
   const header=lines[0]||[];
-  all=lines.slice(1).map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]||''])));
+  const sourceRows=lines.slice(1).map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]||''])));
+  ledMessage=((sourceRows.find(r => (r['LED문구']||'').trim()) || {})['LED문구'] || '').trim();
+  all=sourceRows.filter(r => (r['날짜']||'').trim() || (r['출발역']||'').trim() || (r['도착역']||'').trim() || (r['좌석']||'').trim());
   applyFilter();
 }
 
