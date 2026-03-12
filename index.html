@@ -154,7 +154,7 @@ function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
   const tbd=document.getElementById('rowsTable'); tbd.innerHTML='';
   const led=document.getElementById('ledTrack');
-  led.textContent = ledMessage.trim() ? `✈ ${ledMessage.trim()}` : '✈ 환영합니다 · 열차표 대시보드';
+  led.textContent = ledMessage.trim() ? `🐱 ${ledMessage.trim()}` : '🐱 환영합니다 · 열차표 대시보드';
 
   rows.forEach(r=>{
     const from=(r['출발역']||'').trim();
