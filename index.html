@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>열차표 대시보드</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;background:#0f172a;color:#e2e8f0}
+    .wrap{max-width:980px;margin:0 auto;padding:24px}
+    h1{margin:0 0 8px;font-size:28px}.sub{color:#94a3b8;margin-bottom:20px}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px;margin-bottom:14px}
+    .row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .k{font-size:12px;color:#9ca3af}.v{font-size:18px;font-weight:700}
+    .tools{display:flex;gap:8px;flex-wrap:wrap}
+    input,select{background:#0b1220;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:8px}
+    button{background:#2563eb;border:none;color:white;border-radius:8px;padding:8px 12px;cursor:pointer}
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #1f2937;padding:10px;text-align:left;font-size:14px}
+    th{color:#93c5fd}
+    a{color:#93c5fd}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>열차표 대시보드</h1>
+    <div class="sub">Google Sheet 자동 연동 · 모바일 대응</div>
+
+    <div class="card row">
+      <div><div class="k">총 건수</div><div class="v" id="total">-</div></div>
+      <div><div class="k">다음 일정</div><div class="v" id="next">-</div></div>
+      <div><div class="k">출발역 종류</div><div class="v" id="fromCount">-</div></div>
+      <div><div class="k">도착역 종류</div><div class="v" id="toCount">-</div></div>
+    </div>
+
+    <div class="card tools">
+      <input id="q" placeholder="역/좌석 검색" />
+      <input id="dateFrom" type="date" />
+      <input id="dateTo" type="date" />
+      <button id="refresh">새로고침</button>
+    </div>
+
+    <div class="card" style="overflow:auto">
+      <table>
+        <thead>
+          <tr><th>날짜</th><th>출발역</th><th>도착역</th><th>출발</th><th>도착</th><th>열차번호</th><th>좌석</th><th>메모</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="sub">원본 시트: <a target="_blank" href="https://docs.google.com/spreadsheets/d/1WTfKa5KAAGv4Zt_uChB8eEir_W896TOXVimt51Mw4qA/edit?usp=sharing">열차표 기록</a></div>
+  </div>
+
+<script>
+const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1WTfKa5KAAGv4Zt_uChB8eEir_W896TOXVimt51Mw4qA/export?format=csv&gid=0';
+let all=[];
+
+function parseCSV(text){
+  const lines=[];let cur='';let row=[];let q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(c==='"'){
+      if(q && n==='"'){cur+='"'; i++;}
+      else q=!q;
+    }else if(c===',' && !q){row.push(cur); cur='';}
+    else if((c==='\n' || c==='\r') && !q){
+      if(c==='\r'&&n==='\n') i++;
+      row.push(cur); lines.push(row); row=[]; cur='';
+    }else cur+=c;
+  }
+  if(cur.length||row.length){row.push(cur); lines.push(row)}
+  return lines;
+}
+
+function toDate(s){
+  if(!s) return null;
+  const d = new Date(s+'T00:00:00');
+  return isNaN(d)?null:d;
+}
+
+function render(rows){
+  const tb=document.getElementById('rows'); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');
+    ['날짜','출발역','도착역','출발시간','도착시간','열차번호','좌석','메모'].forEach(k=>{
+      const td=document.createElement('td'); td.textContent=r[k]||''; tr.appendChild(td);
+    }); tb.appendChild(tr);
+  });
+  document.getElementById('total').textContent=rows.length;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const next=rows
+    .map(r=>({r,d:toDate(r['날짜'])}))
+    .filter(x=>x.d && x.d>=today)
+    .sort((a,b)=>a.d-b.d)[0];
+  document.getElementById('next').textContent=next?`${next.r['날짜']} ${next.r['출발역']}→${next.r['도착역']}`:'-';
+  document.getElementById('fromCount').textContent=new Set(rows.map(r=>r['출발역']).filter(Boolean)).size;
+  document.getElementById('toCount').textContent=new Set(rows.map(r=>r['도착역']).filter(Boolean)).size;
+}
+
+function applyFilter(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const from=toDate(document.getElementById('dateFrom').value);
+  const to=toDate(document.getElementById('dateTo').value);
+  const out=all.filter(r=>{
+    const blob=Object.values(r).join(' ').toLowerCase();
+    if(q && !blob.includes(q)) return false;
+    const d=toDate(r['날짜']);
+    if(from && (!d || d<from)) return false;
+    if(to && (!d || d>to)) return false;
+    return true;
+  }).sort((a,b)=> (a['날짜']||'').localeCompare(b['날짜']||''));
+  render(out);
+}
+
+async function load(){
+  const res=await fetch(SHEET_CSV+'#'+Date.now());
+  const txt=await res.text();
+  const lines=parseCSV(txt).filter(r=>r.some(x=>x&&x.trim()));
+  const header=lines[0]||[];
+  all=lines.slice(1).map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]||''])));
+  applyFilter();
+}
+
+document.getElementById('q').addEventListener('input',applyFilter);
+document.getElementById('dateFrom').addEventListener('change',applyFilter);
+document.getElementById('dateTo').addEventListener('change',applyFilter);
+document.getElementById('refresh').addEventListener('click',load);
+load();
+</script>
+</body>
+</html>
