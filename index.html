@@ -26,18 +26,19 @@
     .led-track{
       white-space:nowrap;
       display:inline-block;
-      padding-left:100%;
+      padding-left:0;
       color:#facc15;
       font-weight:800;
       font-size:16px;
       letter-spacing:.4px;
-      animation:ledScroll 22s linear infinite;
+      animation:ledScroll 28s linear infinite;
       text-shadow:0 0 6px rgba(250,204,21,.5);
       font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+      will-change: transform;
     }
     @keyframes ledScroll{
       0%{transform:translateX(0)}
-      100%{transform:translateX(-100%)}
+      100%{transform:translateX(-50%)}
     }
     table{width:100%;border-collapse:collapse;background:#fff}
     th,td{border-bottom:1px solid #e2e8f0;padding:10px;text-align:left;font-size:15px;color:#0f172a;white-space:nowrap}
@@ -154,7 +155,8 @@ function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
   const tbd=document.getElementById('rowsTable'); tbd.innerHTML='';
   const led=document.getElementById('ledTrack');
-  led.textContent = ledMessage.trim() ? `🐱 ${ledMessage.trim()}` : '🐱 환영합니다 · 열차표 대시보드';
+  const base = ledMessage.trim() ? `🐱 ${ledMessage.trim()}   ◆   ` : '🐱 환영합니다 · 열차표 대시보드   ◆   ';
+  led.textContent = `${base}${base}${base}${base}`;
 
   rows.forEach(r=>{
     const from=(r['출발역']||'').trim();
