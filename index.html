@@ -14,6 +14,31 @@
     .tools{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center}
     input,select{background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;padding:10px;width:100%;min-width:0}
     button{background:#2563eb;border:none;color:white;border-radius:10px;padding:10px 12px;cursor:pointer;white-space:nowrap}
+    .led-wrap{
+      background:#0b1220;
+      border:2px solid #334155;
+      border-radius:12px;
+      padding:10px 0;
+      margin-bottom:12px;
+      overflow:hidden;
+      box-shadow:inset 0 0 0 1px rgba(148,163,184,.2);
+    }
+    .led-track{
+      white-space:nowrap;
+      display:inline-block;
+      padding-left:100%;
+      color:#facc15;
+      font-weight:800;
+      font-size:16px;
+      letter-spacing:.4px;
+      animation:ledScroll 22s linear infinite;
+      text-shadow:0 0 6px rgba(250,204,21,.5);
+      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    }
+    @keyframes ledScroll{
+      0%{transform:translateX(0)}
+      100%{transform:translateX(-100%)}
+    }
     .ticket-list{display:grid;gap:12px}
     .ticket{
       border-radius:18px;
@@ -65,6 +90,10 @@
     <h1>열차표 대시보드</h1>
     <div class="sub">Google Sheet 자동 연동 · 모바일 대응</div>
 
+    <div class="led-wrap" aria-label="운행 전광판">
+      <div class="led-track" id="ledTrack">LOADING...</div>
+    </div>
+
     <div class="card tools" style="grid-template-columns:1fr">
       <button id="refresh">새로고침</button>
     </div>
@@ -110,6 +139,17 @@ function dateWithWeekday(s){
 
 function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
+  const led=document.getElementById('ledTrack');
+  const ledItems = rows.slice(0, 12).map(r=>{
+    const d = dateWithWeekday(r['날짜']);
+    const from=(r['출발역']||'-').trim();
+    const to=(r['도착역']||'-').trim();
+    const st=(r['출발시간']||'-').trim();
+    const et=(r['도착시간']||'-').trim();
+    return `${d}  ${from}→${to}  ${st}-${et}`;
+  });
+  led.textContent = ledItems.length ? `✈ BOARDING INFO · ${ledItems.join('   ◆   ')}   ◆   ` : 'NO DATA';
+
   rows.forEach(r=>{
     const from=(r['출발역']||'').trim();
     const to=(r['도착역']||'').trim();
