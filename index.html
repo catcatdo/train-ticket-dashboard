@@ -101,6 +101,13 @@ function toDate(s){
   return isNaN(d)?null:d;
 }
 
+function dateWithWeekday(s){
+  const d = toDate(s);
+  if(!d) return s || '-';
+  const wd = ['일','월','화','수','목','금','토'][d.getDay()];
+  return `${s} (${wd})`;
+}
+
 function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
   rows.forEach(r=>{
@@ -114,7 +121,7 @@ function render(rows){
     card.className=`ticket ${dirClass}${isKg ? ' kg' : ''}`;
     card.innerHTML = `
       <div class="ticket-top">
-        <div class="ticket-date">${r['날짜']||'-'}</div>
+        <div class="ticket-date">${dateWithWeekday(r['날짜'])}</div>
         <div class="ticket-seat">${r['좌석']||'좌석 미정'}</div>
       </div>
       <div class="route">
