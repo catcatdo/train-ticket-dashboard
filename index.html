@@ -56,18 +56,15 @@
     .ticket.up{background:linear-gradient(to bottom,#d1fae5 0%,#d1fae5 32%,#ffffff 33%,#ffffff 100%);border-color:#10b981}
     .ticket.down{background:linear-gradient(to bottom,#dbeafe 0%,#dbeafe 32%,#ffffff 33%,#ffffff 100%);border-color:#0ea5e9}
     .ticket.kg{background:linear-gradient(to bottom,#fef3c7 0%,#fef3c7 32%,#ffffff 33%,#ffffff 100%);border-color:#eab308}
-    .ticket-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .ticket-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding-bottom:8px;border-bottom:1px dashed #94a3b8}
     .ticket-date{font-size:18px;color:#0f172a;font-weight:800}
     .ticket-seat{font-size:16px;background:#eef2ff;color:#1e3a8a;padding:7px 12px;border-radius:999px;font-weight:700;border:1px solid #94a3b8}
-    .ticket-table{border:1.5px solid #94a3b8;border-radius:12px;overflow:hidden;background:#fff}
-    .trow{display:grid;grid-template-columns:110px 1fr;border-bottom:1px solid #cbd5e1}
-    .trow:last-child{border-bottom:none}
-    .th{background:#f8fafc;color:#1e40af;font-size:15px;font-weight:800;padding:10px 12px;border-right:1px solid #cbd5e1}
-    .td{font-size:17px;font-weight:700;color:#0f172a;padding:10px 12px}
-    .route-line{font-size:28px;font-weight:900;letter-spacing:.1px;line-height:1.1}
-    .time-inline{display:flex;gap:18px;flex-wrap:wrap}
-    .time-inline b{font-size:24px}
-    .memo{font-size:15px;color:#475569;line-height:1.35}
+    .route{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 12px;padding-bottom:8px;border-bottom:1px dashed #94a3b8}
+    .station{font-size:38px;font-weight:900;letter-spacing:.2px;line-height:1.1;color:#0f172a}
+    .arrow{opacity:.8;font-size:24px;flex-shrink:0;color:#475569}
+    .times{display:flex;justify-content:space-between;gap:12px;font-size:17px;color:#334155}
+    .time-strong{display:block;font-size:26px;font-weight:900;color:#0f172a;line-height:1.1}
+    .memo{margin-top:8px;font-size:16px;color:#475569;line-height:1.35;border-top:1px dashed #cbd5e1;padding-top:8px}
     a{color:#2563eb}
 
     @media (max-width: 760px){
@@ -80,13 +77,12 @@
       #refresh{grid-column:1 / -1}
       .ticket{padding:18px;min-height:230px}
       .ticket-date{font-size:16px}
-      .ticket-seat{font-size:14px}
-      .trow{grid-template-columns:90px 1fr}
-      .th{font-size:13px;padding:9px 10px}
-      .td{font-size:15px;padding:9px 10px}
-      .route-line{font-size:22px}
-      .time-inline b{font-size:20px}
-      .memo{font-size:14px}
+      .ticket-seat{font-size:15px}
+      .station{font-size:32px}
+      .arrow{font-size:22px}
+      .times{font-size:16px}
+      .time-strong{font-size:24px}
+      .memo{font-size:15px}
     }
   </style>
 </head>
@@ -164,24 +160,16 @@ function render(rows){
         <div class="ticket-date">${dateWithWeekday(r['날짜'])}</div>
         <div class="ticket-seat">${r['좌석']||'좌석 미정'}</div>
       </div>
-      <div class="ticket-table">
-        <div class="trow">
-          <div class="th">구분</div>
-          <div class="td">${isUp ? '상행' : '하행'}</div>
-        </div>
-        <div class="trow">
-          <div class="th">노선</div>
-          <div class="td route-line">${from||'-'} → ${to||'-'}</div>
-        </div>
-        <div class="trow">
-          <div class="th">시간</div>
-          <div class="td time-inline">출발 <b>${r['출발시간']||'-'}</b> · 도착 <b>${r['도착시간']||'-'}</b></div>
-        </div>
-        <div class="trow">
-          <div class="th">메모</div>
-          <div class="td memo">${(r['메모']||'').trim() || '-'}</div>
-        </div>
+      <div class="route">
+        <div class="station">${from||'-'}</div>
+        <div class="arrow">→</div>
+        <div class="station">${to||'-'}</div>
       </div>
+      <div class="times">
+        <div>${isUp ? '상행' : '하행'} · 출발 <span class="time-strong">${r['출발시간']||'-'}</span></div>
+        <div>도착 <span class="time-strong">${r['도착시간']||'-'}</span></div>
+      </div>
+      ${(r['메모']||'').trim() ? `<div class="memo">메모 · ${r['메모']}</div>` : ''}
     `;
     tb.appendChild(card);
   });
