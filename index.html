@@ -39,6 +39,9 @@
       0%{transform:translateX(0)}
       100%{transform:translateX(-100%)}
     }
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th,td{border-bottom:1px solid #e2e8f0;padding:10px;text-align:left;font-size:15px;color:#0f172a;white-space:nowrap}
+    th{font-weight:800;color:#1e40af;background:#f8fafc;position:sticky;top:0}
     .ticket-list{display:grid;gap:12px}
     .ticket{
       border-radius:18px;
@@ -100,6 +103,15 @@
 
     <div id="rows" class="ticket-list"></div>
 
+    <div class="card" style="overflow:auto">
+      <table>
+        <thead>
+          <tr><th>날짜</th><th>출발역</th><th>도착역</th><th>출발</th><th>도착</th><th>좌석</th></tr>
+        </thead>
+        <tbody id="rowsTable"></tbody>
+      </table>
+    </div>
+
 
   </div>
 
@@ -139,6 +151,7 @@ function dateWithWeekday(s){
 
 function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
+  const tbd=document.getElementById('rowsTable'); tbd.innerHTML='';
   const led=document.getElementById('ledTrack');
   const ledItems = rows.slice(0, 12).map(r=>{
     const d = dateWithWeekday(r['날짜']);
@@ -176,6 +189,17 @@ function render(rows){
       ${(r['메모']||'').trim() ? `<div class="memo">메모 · ${r['메모']}</div>` : ''}
     `;
     tb.appendChild(card);
+
+    const tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td>${dateWithWeekday(r['날짜'])}</td>
+      <td>${from||'-'}</td>
+      <td>${to||'-'}</td>
+      <td>${r['출발시간']||'-'}</td>
+      <td>${r['도착시간']||'-'}</td>
+      <td>${r['좌석']||'-'}</td>
+    `;
+    tbd.appendChild(tr);
   });
 
 }
