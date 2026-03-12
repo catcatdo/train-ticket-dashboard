@@ -22,6 +22,9 @@
       border:1px solid rgba(147,197,253,.3);
       box-shadow:0 10px 24px rgba(0,0,0,.35);
     }
+    .ticket.up{background:linear-gradient(145deg,#7c3aed 0%,#4f46e5 35%,#0f172a 100%);border-color:rgba(196,181,253,.45)}
+    .ticket.down{background:linear-gradient(145deg,#0ea5e9 0%,#2563eb 35%,#0f172a 100%);border-color:rgba(147,197,253,.45)}
+    .ticket.kg{outline:2px solid rgba(250,204,21,.9); box-shadow:0 0 0 3px rgba(250,204,21,.2),0 10px 24px rgba(0,0,0,.35)}
     .ticket-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
     .ticket-date{font-size:13px;color:#dbeafe;font-weight:600}
     .ticket-seat{font-size:12px;background:rgba(255,255,255,.14);padding:4px 8px;border-radius:999px}
@@ -99,20 +102,26 @@ function toDate(s){
 function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
   rows.forEach(r=>{
+    const from=(r['출발역']||'').trim();
+    const to=(r['도착역']||'').trim();
+    const isUp = from.includes('김천구미') || from.includes('안동') || to.includes('서울');
+    const dirClass = isUp ? 'up' : 'down';
+    const isKg = from.includes('김천구미') || to.includes('김천구미');
+
     const card=document.createElement('article');
-    card.className='ticket';
+    card.className=`ticket ${dirClass}${isKg ? ' kg' : ''}`;
     card.innerHTML = `
       <div class="ticket-top">
         <div class="ticket-date">${r['날짜']||'-'}</div>
         <div class="ticket-seat">${r['좌석']||'좌석 미정'}</div>
       </div>
       <div class="route">
-        <div class="station">${r['출발역']||'-'}</div>
+        <div class="station">${from||'-'}</div>
         <div class="arrow">→</div>
-        <div class="station">${r['도착역']||'-'}</div>
+        <div class="station">${to||'-'}</div>
       </div>
       <div class="times">
-        <div>출발 <span class="time-strong">${r['출발시간']||'-'}</span></div>
+        <div>${isUp ? '상행' : '하행'} · 출발 <span class="time-strong">${r['출발시간']||'-'}</span></div>
         <div>도착 <span class="time-strong">${r['도착시간']||'-'}</span></div>
       </div>
       ${(r['메모']||'').trim() ? `<div class="memo">메모 · ${r['메모']}</div>` : ''}
