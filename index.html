@@ -42,7 +42,7 @@
     <div class="card" style="overflow:auto">
       <table>
         <thead>
-          <tr><th>날짜</th><th>출발역</th><th>도착역</th><th>출발</th><th>도착</th><th>열차번호</th><th>좌석</th><th>메모</th></tr>
+          <tr><th>날짜</th><th>출발역</th><th>도착역</th><th>출발</th><th>도착</th><th>좌석</th><th>메모</th></tr>
         </thead>
         <tbody id="rows"></tbody>
       </table>
@@ -82,7 +82,7 @@ function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
   rows.forEach(r=>{
     const tr=document.createElement('tr');
-    ['날짜','출발역','도착역','출발시간','도착시간','열차번호','좌석','메모'].forEach(k=>{
+    ['날짜','출발역','도착역','출발시간','도착시간','좌석','메모'].forEach(k=>{
       const td=document.createElement('td'); td.textContent=r[k]||''; tr.appendChild(td);
     }); tb.appendChild(tr);
   });
