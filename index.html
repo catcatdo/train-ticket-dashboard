@@ -12,11 +12,25 @@
     .row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
     .k{font-size:12px;color:#9ca3af}.v{font-size:18px;font-weight:700;line-height:1.3}
     .tools{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:center}
-    input,select{background:#0b1220;color:#e2e8f0;border:1px solid #334155;border-radius:8px;padding:10px;width:100%;min-width:0}
-    button{background:#2563eb;border:none;color:white;border-radius:8px;padding:10px 12px;cursor:pointer;white-space:nowrap}
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid #1f2937;padding:10px;text-align:left;font-size:14px}
-    th{color:#93c5fd}
+    input,select{background:#0b1220;color:#e2e8f0;border:1px solid #334155;border-radius:10px;padding:10px;width:100%;min-width:0}
+    button{background:#2563eb;border:none;color:white;border-radius:10px;padding:10px 12px;cursor:pointer;white-space:nowrap}
+    .ticket-list{display:grid;gap:12px}
+    .ticket{
+      border-radius:18px;
+      padding:14px;
+      background:linear-gradient(145deg,#1e3a8a 0%,#1d4ed8 35%,#0f172a 100%);
+      border:1px solid rgba(147,197,253,.3);
+      box-shadow:0 10px 24px rgba(0,0,0,.35);
+    }
+    .ticket-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .ticket-date{font-size:13px;color:#dbeafe;font-weight:600}
+    .ticket-seat{font-size:12px;background:rgba(255,255,255,.14);padding:4px 8px;border-radius:999px}
+    .route{display:flex;align-items:center;gap:10px;margin:6px 0 10px}
+    .station{font-size:20px;font-weight:800;letter-spacing:.2px}
+    .arrow{opacity:.9;font-size:18px}
+    .times{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#bfdbfe}
+    .time-strong{display:block;font-size:17px;font-weight:700;color:#fff}
+    .memo{margin-top:8px;font-size:12px;color:#cbd5e1}
     a{color:#93c5fd}
 
     @media (max-width: 760px){
@@ -27,12 +41,7 @@
       .tools{grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:5;background:#111827;border-radius:12px;padding:10px}
       #q{grid-column:1 / -1}
       #refresh{grid-column:1 / -1}
-
-      thead{display:none}
-      table,tbody,tr,td{display:block;width:100%}
-      tr{background:#0b1220;border:1px solid #1f2937;border-radius:10px;padding:8px;margin-bottom:10px}
-      td{border-bottom:none;padding:6px 8px;font-size:13px;display:flex;justify-content:space-between;gap:8px}
-      td::before{content:attr(data-label);color:#93c5fd;font-weight:600;flex-shrink:0}
+      .station{font-size:18px}
     }
   </style>
 </head>
@@ -55,14 +64,7 @@
       <button id="refresh">새로고침</button>
     </div>
 
-    <div class="card" style="overflow:auto">
-      <table>
-        <thead>
-          <tr><th>날짜</th><th>출발역</th><th>도착역</th><th>출발</th><th>도착</th><th>좌석</th><th>메모</th></tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
+    <div id="rows" class="ticket-list"></div>
 
 
   </div>
@@ -97,14 +99,25 @@ function toDate(s){
 function render(rows){
   const tb=document.getElementById('rows'); tb.innerHTML='';
   rows.forEach(r=>{
-    const tr=document.createElement('tr');
-    ['날짜','출발역','도착역','출발시간','도착시간','좌석','메모'].forEach(k=>{
-      const td=document.createElement('td');
-      td.setAttribute('data-label', k);
-      td.textContent=r[k]||'';
-      tr.appendChild(td);
-    });
-    tb.appendChild(tr);
+    const card=document.createElement('article');
+    card.className='ticket';
+    card.innerHTML = `
+      <div class="ticket-top">
+        <div class="ticket-date">${r['날짜']||'-'}</div>
+        <div class="ticket-seat">${r['좌석']||'좌석 미정'}</div>
+      </div>
+      <div class="route">
+        <div class="station">${r['출발역']||'-'}</div>
+        <div class="arrow">→</div>
+        <div class="station">${r['도착역']||'-'}</div>
+      </div>
+      <div class="times">
+        <div>출발 <span class="time-strong">${r['출발시간']||'-'}</span></div>
+        <div>도착 <span class="time-strong">${r['도착시간']||'-'}</span></div>
+      </div>
+      ${(r['메모']||'').trim() ? `<div class="memo">메모 · ${r['메모']}</div>` : ''}
+    `;
+    tb.appendChild(card);
   });
   document.getElementById('total').textContent=rows.length;
   const today=new Date(); today.setHours(0,0,0,0);
