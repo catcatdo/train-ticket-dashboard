@@ -64,6 +64,26 @@
     .dir-badge.up{background:#16a34a}
     .dir-badge.down{background:#2563eb}
 
+    .new-badge{
+      display:inline-block;
+      margin-left:8px;
+      padding:4px 9px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.4px;
+      color:#fef9c3;
+      background:#a21caf;
+      border:1px solid rgba(250,204,21,.9);
+      box-shadow:0 0 8px rgba(250,204,21,.8), 0 0 16px rgba(168,85,247,.7);
+      animation:newGlow 1.1s ease-in-out infinite alternate;
+      vertical-align:1px;
+    }
+    @keyframes newGlow{
+      from{opacity:.78; transform:translateY(0)}
+      to{opacity:1; transform:translateY(-1px)}
+    }
+
     .ticket-body{padding:12px}
     .route{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px}
     .station{font-size:30px;font-weight:900;line-height:1.1;word-break:keep-all}
@@ -157,7 +177,49 @@
 
 <script>
 const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1WTfKa5KAAGv4Zt_uChB8eEir_W896TOXVimt51Mw4qA/export?format=csv&gid=0';
+const NEW_WINDOW_MS = 48 * 60 * 60 * 1000; // 2일
+const FIRST_SEEN_KEY = 'trainTicketFirstSeenV1';
 let all=[];
+
+function getTicketKey(r){
+  return [
+    (r['날짜']||'').trim(),
+    (r['출발역']||'').trim(),
+    (r['도착역']||'').trim(),
+    (r['출발시간']||'').trim(),
+    (r['도착시간']||'').trim(),
+    (r['좌석']||'').trim()
+  ].join('|');
+}
+
+function loadFirstSeenMap(){
+  try{return JSON.parse(localStorage.getItem(FIRST_SEEN_KEY) || '{}');}
+  catch(_){return {};}
+}
+
+function saveFirstSeenMap(map){
+  localStorage.setItem(FIRST_SEEN_KEY, JSON.stringify(map));
+}
+
+function syncFirstSeen(rows){
+  const now = Date.now();
+  const seen = loadFirstSeenMap();
+  const next = {};
+  rows.forEach(r=>{
+    const key = getTicketKey(r);
+    if(!key.replace(/\|/g,'')) return;
+    next[key] = seen[key] || now;
+  });
+  saveFirstSeenMap(next);
+  return next;
+}
+
+function isNewTicket(row, seenMap){
+  const key = getTicketKey(row);
+  const firstSeen = seenMap[key];
+  if(!firstSeen) return false;
+  return (Date.now() - firstSeen) < NEW_WINDOW_MS;
+}
 
 function parseCSV(text){
   const lines=[];let cur='';let row=[];let q=false;
@@ -213,7 +275,8 @@ function updateSummary(sortedRows){
   let next = null;
   sortedRows.forEach(r=>{
     const dt = parseDateTime(r);
-    if(!dt) return;    if(dt >= now && (!next || dt < next.dt)){
+    if(!dt) return;
+    if(dt >= now && (!next || dt < next.dt)){
       next = {dt, row:r};
     }
   });
@@ -229,7 +292,7 @@ function updateSummary(sortedRows){
     nextEl.textContent = '다음 출발: 예정 없음';
   }}
 
-function render(rows){
+function render(rows, seenMap){
   const tb=document.getElementById('rows');
   tb.innerHTML='';
 
@@ -251,7 +314,7 @@ function render(rows){
     card.className=`ticket ${depClass}`;
     card.innerHTML=`
       <div class="ticket-head">
-        <div>${dateWithWeekday(r['날짜'])}</div>
+        <div>${dateWithWeekday(r['날짜'])}${isNewTicket(r, seenMap) ? '<span class="new-badge">NEW ✨</span>' : ''}</div>
         <div><span class="dir-badge ${dir==='상행'?'up':'down'}">${dir}</span></div>
       </div>
       <div class="ticket-body">
@@ -310,7 +373,8 @@ function applySort(){
     const bk=`${b['날짜']||''} ${b['출발시간']||''}`;
     return ak.localeCompare(bk);
   });
-  render(out);
+  const seenMap = syncFirstSeen(out);
+  render(out, seenMap);
 }
 
 async function load(){
