@@ -183,9 +183,14 @@ let all=[];
 function parseRegisteredAt(value){
   const raw = (value||'').trim();
   if(!raw) return null;
-  // 시트 저장 포맷: YYYY-MM-DD HH:mm:ss
-  const normalized = raw.replace(' ', 'T');
-  const dt = new Date(normalized);
+  // 시트 저장 포맷: YYYY-MM-DD H:mm:ss 또는 HH:mm:ss
+  const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if(m){
+    const y=Number(m[1]), mo=Number(m[2])-1, d=Number(m[3]);
+    const h=Number(m[4]), mi=Number(m[5]), s=Number(m[6]||0);
+    return new Date(y, mo, d, h, mi, s, 0);
+  }
+  const dt = new Date(raw.replace(' ', 'T'));
   return isNaN(dt) ? null : dt;
 }
 
