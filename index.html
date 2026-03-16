@@ -177,8 +177,10 @@
 
 <script>
 const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1WTfKa5KAAGv4Zt_uChB8eEir_W896TOXVimt51Mw4qA/export?format=csv&gid=0';
-const NEW_WINDOW_MS = 48 * 60 * 60 * 1000; // 2일
-const FIRST_SEEN_KEY = 'trainTicketFirstSeenV1';
+const NEW_TARGET_KEYS = new Set([
+  // 사용자가 오늘 등록한 표만 NEW 표식
+  '2026-03-20|서울|안동|16:11|18:36|4호차 4D'
+]);
 let all=[];
 
 function getTicketKey(r){
@@ -192,33 +194,8 @@ function getTicketKey(r){
   ].join('|');
 }
 
-function loadFirstSeenMap(){
-  try{return JSON.parse(localStorage.getItem(FIRST_SEEN_KEY) || '{}');}
-  catch(_){return {};}
-}
-
-function saveFirstSeenMap(map){
-  localStorage.setItem(FIRST_SEEN_KEY, JSON.stringify(map));
-}
-
-function syncFirstSeen(rows){
-  const now = Date.now();
-  const seen = loadFirstSeenMap();
-  const next = {};
-  rows.forEach(r=>{
-    const key = getTicketKey(r);
-    if(!key.replace(/\|/g,'')) return;
-    next[key] = seen[key] || now;
-  });
-  saveFirstSeenMap(next);
-  return next;
-}
-
-function isNewTicket(row, seenMap){
-  const key = getTicketKey(row);
-  const firstSeen = seenMap[key];
-  if(!firstSeen) return false;
-  return (Date.now() - firstSeen) < NEW_WINDOW_MS;
+function isNewTicket(row){
+  return NEW_TARGET_KEYS.has(getTicketKey(row));
 }
 
 function parseCSV(text){
@@ -292,7 +269,7 @@ function updateSummary(sortedRows){
     nextEl.textContent = '다음 출발: 예정 없음';
   }}
 
-function render(rows, seenMap){
+function render(rows){
   const tb=document.getElementById('rows');
   tb.innerHTML='';
 
@@ -314,7 +291,7 @@ function render(rows, seenMap){
     card.className=`ticket ${depClass}`;
     card.innerHTML=`
       <div class="ticket-head">
-        <div>${dateWithWeekday(r['날짜'])}${isNewTicket(r, seenMap) ? '<span class="new-badge">NEW ✨</span>' : ''}</div>
+        <div>${dateWithWeekday(r['날짜'])}${isNewTicket(r) ? '<span class="new-badge">NEW ✨</span>' : ''}</div>
         <div><span class="dir-badge ${dir==='상행'?'up':'down'}">${dir}</span></div>
       </div>
       <div class="ticket-body">
@@ -373,8 +350,7 @@ function applySort(){
     const bk=`${b['날짜']||''} ${b['출발시간']||''}`;
     return ak.localeCompare(bk);
   });
-  const seenMap = syncFirstSeen(out);
-  render(out, seenMap);
+  render(out);
 }
 
 async function load(){
