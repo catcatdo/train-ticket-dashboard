@@ -177,25 +177,22 @@
 
 <script>
 const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1WTfKa5KAAGv4Zt_uChB8eEir_W896TOXVimt51Mw4qA/export?format=csv&gid=0';
-const NEW_TARGET_KEYS = new Set([
-  // 사용자가 오늘 등록한 표만 NEW 표식
-  '2026-03-20|서울|안동|16:11|18:36|4호차 4D'
-]);
+const NEW_WINDOW_MS = 48 * 60 * 60 * 1000; // 2일
 let all=[];
 
-function getTicketKey(r){
-  return [
-    (r['날짜']||'').trim(),
-    (r['출발역']||'').trim(),
-    (r['도착역']||'').trim(),
-    (r['출발시간']||'').trim(),
-    (r['도착시간']||'').trim(),
-    (r['좌석']||'').trim()
-  ].join('|');
+function parseRegisteredAt(value){
+  const raw = (value||'').trim();
+  if(!raw) return null;
+  // 시트 저장 포맷: YYYY-MM-DD HH:mm:ss
+  const normalized = raw.replace(' ', 'T');
+  const dt = new Date(normalized);
+  return isNaN(dt) ? null : dt;
 }
 
 function isNewTicket(row){
-  return NEW_TARGET_KEYS.has(getTicketKey(row));
+  const reg = parseRegisteredAt(row['등록시각']);
+  if(!reg) return false;
+  return (Date.now() - reg.getTime()) < NEW_WINDOW_MS;
 }
 
 function parseCSV(text){
