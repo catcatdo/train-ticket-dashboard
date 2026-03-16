@@ -22,7 +22,7 @@
     }
 
     *{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);padding-bottom:70px}
     .wrap{max-width:820px;margin:0 auto;padding:12px}
 
     .top{
@@ -66,7 +66,7 @@
 
     .ticket-body{padding:12px}
     .route{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px}
-    .station{font-size:34px;font-weight:900;line-height:1.1;word-break:keep-all}
+    .station{font-size:30px;font-weight:900;line-height:1.1;word-break:keep-all}
     .station.right{text-align:right}
     .arrow{font-size:22px;color:#64748b}
 
@@ -80,13 +80,54 @@
     .meta-label{font-size:12px;color:var(--muted);font-weight:700}
     .meta-value{font-size:22px;font-weight:900;line-height:1.15;margin-top:2px}
 
-    .memo{margin-top:8px;background:#fff;border:1px dashed #cbd5e1;border-radius:10px;padding:8px 10px;font-size:14px;color:#475569}
+    .memo-wrap{margin-top:8px}
+    .memo-toggle{
+      display:block;
+      width:100%;
+      text-align:left;
+      border:1px dashed #cbd5e1;
+      background:#fff;
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:14px;
+      color:#475569;
+      cursor:pointer;
+    }
+    .memo-full{display:none;margin-top:6px;background:#fff;border:1px dashed #cbd5e1;border-radius:10px;padding:8px 10px;font-size:14px;color:#334155;line-height:1.35}
+    .memo-wrap.open .memo-full{display:block}
+
     .empty{background:#fff;border:1px dashed #cbd5e1;border-radius:12px;padding:18px 12px;text-align:center;color:#64748b}
 
+    .summary-bar{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      z-index:20;
+      background:rgba(15,23,42,.95);
+      color:#e2e8f0;
+      border-top:1px solid rgba(148,163,184,.35);
+      padding:10px 14px;
+      font-size:13px;
+      font-weight:700;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      backdrop-filter:saturate(160%) blur(4px);
+    }
+
+    @media (max-width:760px){
+      .time-strong{font-size:42px}
+      .station{font-size:26px}
+      .meta-value{font-size:20px}
+    }
+
     @media (min-width:761px){
+      body{padding-bottom:0}
       .wrap{padding:20px}
       .toolbar{display:flex;justify-content:flex-end}
       button{width:auto;padding:10px 14px}
+      .summary-bar{position:sticky;bottom:8px;max-width:820px;margin:8px auto 0;border-radius:12px}
+      .time-strong{font-size:30px}
+      .station{font-size:34px}
     }
   </style>
 </head>
@@ -107,6 +148,11 @@
     </div>
 
     <div id="rows" class="ticket-list"></div>
+  </div>
+
+  <div class="summary-bar" id="summaryBar">
+    <span id="nextTrain">다음 출발: -</span>
+    <span id="remainCount">오늘 남은 표: 0</span>
   </div>
 
 <script>
@@ -154,20 +200,66 @@ function getDepClass(from){
   return '';
 }
 
+function parseDateTime(row){
+  const d=(row['날짜']||'').trim();
+  const t=(row['출발시간']||'').trim();
+  if(!d || !t) return null;
+  const dt = new Date(`${d}T${t}:00`);
+  return isNaN(dt) ? null : dt;
+}
+
+function updateSummary(sortedRows){
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  let next = null;
+  let remain = 0;
+
+  sortedRows.forEach(r=>{
+    const dt = parseDateTime(r);
+    if(!dt) return;
+
+    const sameDay = dt.getFullYear()===today.getFullYear() && dt.getMonth()===today.getMonth() && dt.getDate()===today.getDate();
+    if(sameDay && dt >= now) remain++;
+
+    if(dt >= now && (!next || dt < next.dt)){
+      next = {dt, row:r};
+    }
+  });
+
+  const nextEl = document.getElementById('nextTrain');
+  const remainEl = document.getElementById('remainCount');
+
+  if(next){
+    const m = Math.floor((next.dt - now) / 60000);
+    const from = (next.row['출발역']||'-').trim();
+    const to = (next.row['도착역']||'-').trim();
+    const time = (next.row['출발시간']||'-').trim();
+    nextEl.textContent = `다음 출발: ${from}→${to} ${time} (약 ${m}분 후)`;
+  }else{
+    nextEl.textContent = '다음 출발: 예정 없음';
+  }
+
+  remainEl.textContent = `오늘 남은 표: ${remain}`;
+}
+
 function render(rows){
   const tb=document.getElementById('rows');
   tb.innerHTML='';
 
   if(!rows.length){
     tb.innerHTML='<div class="empty">표시할 열차표가 없어.</div>';
+    updateSummary([]);
     return;
   }
 
-  rows.forEach(r=>{
+  rows.forEach((r,idx)=>{
     const from=(r['출발역']||'').trim();
     const to=(r['도착역']||'').trim();
     const dir=getDir(from,to);
     const depClass=getDepClass(from);
+    const memo=(r['메모']||'').trim();
+    const memoPreview = memo.length>22 ? memo.slice(0,22)+'…' : memo;
 
     const card=document.createElement('article');
     card.className=`ticket ${depClass}`;
@@ -205,11 +297,25 @@ function render(rows){
           </div>
         </div>
 
-        ${(r['메모']||'').trim() ? `<div class="memo">메모 · ${r['메모']}</div>` : ''}
+        ${memo ? `
+          <div class="memo-wrap" id="memo-${idx}">
+            <button class="memo-toggle" data-target="memo-${idx}">메모 · ${memoPreview}</button>
+            <div class="memo-full">${memo}</div>
+          </div>
+        ` : ''}
       </div>
     `;
     tb.appendChild(card);
   });
+
+  document.querySelectorAll('.memo-toggle').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const target = document.getElementById(btn.dataset.target);
+      if(target) target.classList.toggle('open');
+    });
+  });
+
+  updateSummary(rows);
 }
 
 function applySort(){
