@@ -152,7 +152,7 @@
 
   <div class="summary-bar" id="summaryBar">
     <span id="nextTrain">다음 출발: -</span>
-    <span id="remainCount">오늘 남은 표: 0</span>
+    
   </div>
 
 <script>
@@ -210,26 +210,15 @@ function parseDateTime(row){
 
 function updateSummary(sortedRows){
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
   let next = null;
-  let remain = 0;
-
   sortedRows.forEach(r=>{
     const dt = parseDateTime(r);
-    if(!dt) return;
-
-    const sameDay = dt.getFullYear()===today.getFullYear() && dt.getMonth()===today.getMonth() && dt.getDate()===today.getDate();
-    if(sameDay && dt >= now) remain++;
-
-    if(dt >= now && (!next || dt < next.dt)){
+    if(!dt) return;    if(dt >= now && (!next || dt < next.dt)){
       next = {dt, row:r};
     }
   });
 
   const nextEl = document.getElementById('nextTrain');
-  const remainEl = document.getElementById('remainCount');
-
   if(next){
     const m = Math.floor((next.dt - now) / 60000);
     const from = (next.row['출발역']||'-').trim();
@@ -238,10 +227,7 @@ function updateSummary(sortedRows){
     nextEl.textContent = `다음 출발: ${from}→${to} ${time} (약 ${m}분 후)`;
   }else{
     nextEl.textContent = '다음 출발: 예정 없음';
-  }
-
-  remainEl.textContent = `오늘 남은 표: ${remain}`;
-}
+  }}
 
 function render(rows){
   const tb=document.getElementById('rows');
