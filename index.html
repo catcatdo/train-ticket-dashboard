@@ -6,12 +6,19 @@
   <title>열차표 대시보드</title>
   <style>
     :root{
-      --bg:#f3f6fb;
+      --bg:#f4f7fb;
       --text:#0f172a;
       --muted:#64748b;
+      --line:#dbe3ec;
       --card:#ffffff;
-      --line:#e2e8f0;
-      --primary:#2563eb;
+      --primary:#1d4ed8;
+
+      --dep-andong:#fff4e8;
+      --dep-andong-accent:#f97316;
+      --dep-seoul:#eaf6ff;
+      --dep-seoul-accent:#0ea5e9;
+      --dep-gimcheon:#fffbe6;
+      --dep-gimcheon-accent:#eab308;
     }
 
     *{box-sizing:border-box}
@@ -22,138 +29,118 @@
       color:var(--text);
     }
 
-    .wrap{max-width:780px;margin:0 auto;padding:16px}
-
+    .wrap{max-width:980px;margin:0 auto;padding:14px}
     .top{
       background:var(--card);
       border:1px solid var(--line);
-      border-radius:16px;
+      border-radius:14px;
       padding:14px;
-      margin-bottom:12px;
+      margin-bottom:10px;
       box-shadow:0 6px 20px rgba(15,23,42,.05);
     }
     h1{margin:0;font-size:22px;line-height:1.2}
-    .sub{margin-top:4px;color:var(--muted);font-size:13px}
+    .sub{margin-top:4px;font-size:13px;color:var(--muted)}
 
-    .toolbar{
-      position:sticky; top:0; z-index:5;
-      background:rgba(243,246,251,.92);
-      backdrop-filter:saturate(180%) blur(8px);
-      padding:6px 0 10px;
-      margin-bottom:6px;
-    }
-
+    .toolbar{display:flex;justify-content:flex-end;margin-bottom:8px}
     button{
-      width:100%;
       border:0;
-      border-radius:12px;
-      padding:12px 14px;
-      font-size:15px;
-      font-weight:700;
-      color:#fff;
       background:var(--primary);
+      color:#fff;
+      border-radius:10px;
+      padding:10px 14px;
+      font-size:14px;
+      font-weight:700;
       cursor:pointer;
     }
 
-    .ticket-list{display:grid;gap:10px}
-
-    .ticket{
+    .table-wrap{
       background:var(--card);
       border:1px solid var(--line);
-      border-radius:16px;
-      overflow:hidden;
+      border-radius:14px;
+      overflow:auto;
       box-shadow:0 8px 24px rgba(15,23,42,.06);
     }
 
-    .ticket-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:12px 14px;
+    table{
+      width:100%;
+      min-width:820px;
+      border-collapse:separate;
+      border-spacing:0;
       font-size:14px;
-      font-weight:700;
-      color:#fff;
-      background:linear-gradient(90deg,#2563eb,#1d4ed8);
     }
 
-    .ticket.dep-seoul .ticket-head{background:linear-gradient(90deg,#0ea5e9,#0284c7)}
-    .ticket.dep-andong .ticket-head{background:linear-gradient(90deg,#fb923c,#f97316)}
-    .ticket.dep-gimcheon .ticket-head{background:linear-gradient(90deg,#facc15,#eab308);color:#1f2937}
-
-    .ticket-body{padding:12px}
-
-    .route{
-      display:grid;
-      grid-template-columns:1fr auto 1fr;
-      gap:8px;
-      align-items:center;
-      margin-bottom:10px;
-    }
-    .station{
-      font-size:28px;
+    thead th{
+      position:sticky; top:0;
+      z-index:1;
+      background:#f8fbff;
+      color:#334155;
+      text-align:center;
       font-weight:800;
-      line-height:1.15;
-      word-break:keep-all;
+      border-bottom:1px solid var(--line);
+      padding:10px 8px;
+      white-space:nowrap;
     }
-    .station.right{text-align:right}
-    .arrow{font-size:20px;color:#64748b}
 
-    .times{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-      margin-bottom:10px;
+    tbody td{
+      border-bottom:1px solid #edf2f7;
+      padding:10px 8px;
+      text-align:center;
+      white-space:nowrap;
+      vertical-align:middle;
     }
-    .time-box{
-      border:1px solid #dbe3ec;
-      border-radius:12px;
-      padding:8px 10px;
-      background:#f8fafc;
-    }
-    .time-label{font-size:12px;color:var(--muted);margin-bottom:2px}
-    .time-strong{font-size:28px;font-weight:900;line-height:1.1}
 
-    .meta-grid{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      border:1px solid #dbe3ec;
-      border-radius:12px;
-      overflow:hidden;
-      background:#fff;
+    tbody tr:last-child td{border-bottom:none}
+
+    tbody tr.dep-andong{background:var(--dep-andong)}
+    tbody tr.dep-seoul{background:var(--dep-seoul)}
+    tbody tr.dep-gimcheon{background:var(--dep-gimcheon)}
+
+    tbody tr.dep-andong td:first-child{border-left:4px solid var(--dep-andong-accent)}
+    tbody tr.dep-seoul td:first-child{border-left:4px solid var(--dep-seoul-accent)}
+    tbody tr.dep-gimcheon td:first-child{border-left:4px solid var(--dep-gimcheon-accent)}
+
+    .badge{
+      display:inline-block;
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:12px;
+      font-weight:800;
+      color:#fff;
     }
-    .meta-item{padding:9px 6px;text-align:center;border-right:1px solid #dbe3ec}
-    .meta-item:last-child{border-right:none}
-    .meta-label{font-size:12px;color:#64748b;font-weight:700;margin-bottom:3px}
-    .meta-value{font-size:18px;font-weight:800;line-height:1.2}
+    .badge.up{background:#16a34a}
+    .badge.down{background:#2563eb}
 
     .memo{
-      margin-top:10px;
-      font-size:14px;
+      max-width:220px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
       color:#475569;
-      background:#f8fafc;
-      border:1px dashed #cbd5e1;
-      border-radius:10px;
-      padding:8px 10px;
-      line-height:1.35;
+      margin:0 auto;
     }
 
     .empty{
-      border:1px dashed #cbd5e1;
-      border-radius:14px;
-      padding:18px 12px;
+      padding:20px 12px;
       text-align:center;
       color:#64748b;
-      background:#fff;
     }
 
-    @media (min-width: 761px){
-      .wrap{padding:24px}
-      h1{font-size:26px}
-      .ticket-list{gap:12px}
-      .station{font-size:34px}
-      .time-strong{font-size:34px}
-      button{width:auto;padding:10px 14px}
-      .toolbar{display:flex;justify-content:flex-end;background:transparent;backdrop-filter:none;padding:0 0 10px}
+    .legend{
+      display:flex;gap:8px;flex-wrap:wrap;
+      margin:8px 0 0;
+      color:#475569;font-size:12px;font-weight:700;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:6px;vertical-align:-1px}
+    .dot.andong{background:var(--dep-andong-accent)}
+    .dot.seoul{background:var(--dep-seoul-accent)}
+    .dot.gimcheon{background:var(--dep-gimcheon-accent)}
+
+    @media (max-width:760px){
+      .wrap{padding:10px}
+      h1{font-size:20px}
+      button{width:100%}
+      .toolbar{display:block}
+      .table-wrap{border-radius:12px}
     }
   </style>
 </head>
@@ -161,14 +148,19 @@
   <div class="wrap">
     <div class="top">
       <h1>열차표 대시보드</h1>
-      <div class="sub">Google Sheet 자동 연동 · 모바일 최적화</div>
+      <div class="sub">Google Sheet 자동 연동 · 표 보기 모드</div>
+      <div class="legend">
+        <span><i class="dot andong"></i>안동 출발</span>
+        <span><i class="dot seoul"></i>서울 출발</span>
+        <span><i class="dot gimcheon"></i>김천구미 출발</span>
+      </div>
     </div>
 
     <div class="toolbar">
       <button id="refresh">새로고침</button>
     </div>
 
-    <div id="rows" class="ticket-list"></div>
+    <div class="table-wrap" id="tableWrap"></div>
   </div>
 
 <script>
@@ -206,83 +198,72 @@ function dateWithWeekday(s){
   return `${s} (${wd})`;
 }
 
+function getDir(from,to){
+  return (from.includes('김천구미') || from.includes('안동') || to.includes('서울')) ? '상행' : '하행';
+}
+
+function getDepClass(from){
+  if(from.includes('안동')) return 'dep-andong';
+  if(from.includes('서울')) return 'dep-seoul';
+  if(from.includes('김천구미')) return 'dep-gimcheon';
+  return '';
+}
+
 function render(rows){
-  const tb=document.getElementById('rows');
-  tb.innerHTML='';
+  const el = document.getElementById('tableWrap');
 
   if(!rows.length){
-    tb.innerHTML = `<div class="empty">표시할 열차표가 없어.</div>`;
+    el.innerHTML = '<div class="empty">표시할 열차표가 없어.</div>';
     return;
   }
 
-  rows.forEach(r=>{
+  const trs = rows.map(r=>{
     const from=(r['출발역']||'').trim();
     const to=(r['도착역']||'').trim();
-    const isUp = from.includes('김천구미') || from.includes('안동') || to.includes('서울');
+    const dir = getDir(from,to);
+    const depClass = getDepClass(from);
 
-    const depClass = from.includes('서울')
-      ? 'dep-seoul'
-      : from.includes('안동')
-        ? 'dep-andong'
-        : from.includes('김천구미')
-          ? 'dep-gimcheon'
-          : '';
-
-    const card=document.createElement('article');
-    card.className=`ticket ${depClass}`;
-    card.innerHTML = `
-      <div class="ticket-head">
-        <div>${dateWithWeekday(r['날짜'])}</div>
-        <div>${isUp ? '상행' : '하행'}</div>
-      </div>
-      <div class="ticket-body">
-        <div class="route">
-          <div class="station">${from||'-'}</div>
-          <div class="arrow">→</div>
-          <div class="station right">${to||'-'}</div>
-        </div>
-
-        <div class="times">
-          <div class="time-box">
-            <div class="time-label">출발</div>
-            <div class="time-strong">${r['출발시간']||'-'}</div>
-          </div>
-          <div class="time-box">
-            <div class="time-label">도착</div>
-            <div class="time-strong">${r['도착시간']||'-'}</div>
-          </div>
-        </div>
-
-        <div class="meta-grid">
-          <div class="meta-item">
-            <div class="meta-label">좌석</div>
-            <div class="meta-value">${r['좌석']||'-'}</div>
-          </div>
-          <div class="meta-item">
-            <div class="meta-label">구분</div>
-            <div class="meta-value">${isUp ? '상행' : '하행'}</div>
-          </div>
-          <div class="meta-item">
-            <div class="meta-label">상태</div>
-            <div class="meta-value">예정</div>
-          </div>
-        </div>
-
-        ${(r['메모']||'').trim() ? `<div class="memo">메모 · ${r['메모']}</div>` : ''}
-      </div>
+    return `
+      <tr class="${depClass}">
+        <td>${dateWithWeekday(r['날짜'])}</td>
+        <td><span class="badge ${dir==='상행'?'up':'down'}">${dir}</span></td>
+        <td>${from||'-'}</td>
+        <td>${to||'-'}</td>
+        <td>${r['출발시간']||'-'}</td>
+        <td>${r['도착시간']||'-'}</td>
+        <td>${r['열차번호']||'-'}</td>
+        <td>${r['좌석']||'-'}</td>
+        <td><div class="memo" title="${(r['메모']||'').replace(/"/g,'&quot;')}">${r['메모']||'-'}</div></td>
+      </tr>
     `;
-    tb.appendChild(card);
-  });
+  }).join('');
+
+  el.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>구분</th>
+          <th>출발역</th>
+          <th>도착역</th>
+          <th>출발</th>
+          <th>도착</th>
+          <th>열차번호</th>
+          <th>좌석</th>
+          <th>메모</th>
+        </tr>
+      </thead>
+      <tbody>${trs}</tbody>
+    </table>
+  `;
 }
 
 function applyFilter(){
-  const out = all
-    .slice()
-    .sort((a,b)=> {
-      const ak = `${a['날짜']||''} ${a['출발시간']||''}`;
-      const bk = `${b['날짜']||''} ${b['출발시간']||''}`;
-      return ak.localeCompare(bk);
-    });
+  const out = all.slice().sort((a,b)=>{
+    const ak = `${a['날짜']||''} ${a['출발시간']||''}`;
+    const bk = `${b['날짜']||''} ${b['출발시간']||''}`;
+    return ak.localeCompare(bk);
+  });
   render(out);
 }
 
@@ -290,13 +271,17 @@ async function load(){
   const res = await fetch(SHEET_CSV+'#'+Date.now());
   const txt = await res.text();
   const lines = parseCSV(txt).filter(r=>r.some(x=>x&&x.trim()));
-  const header = lines[0]||[];
+  const header = lines[0] || [];
   const sourceRows = lines.slice(1).map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]||''])));
-  all = sourceRows.filter(r => (r['날짜']||'').trim() || (r['출발역']||'').trim() || (r['도착역']||'').trim() || (r['좌석']||'').trim());
+
+  all = sourceRows.filter(r =>
+    (r['날짜']||'').trim() || (r['출발역']||'').trim() || (r['도착역']||'').trim() || (r['좌석']||'').trim()
+  );
+
   applyFilter();
 }
 
-document.getElementById('refresh').addEventListener('click',load);
+document.getElementById('refresh').addEventListener('click', load);
 load();
 setInterval(load, 10 * 60 * 1000);
 </script>
