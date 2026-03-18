@@ -195,9 +195,11 @@ function parseRegisteredAt(value){
 }
 
 function isNewTicket(row){
+  if(isPastArrival(row)) return false;
   const reg = parseRegisteredAt(row['등록시각']);
   if(!reg) return false;
-  return (Date.now() - reg.getTime()) < NEW_WINDOW_MS;
+  const age = Date.now() - reg.getTime();
+  return age >= 0 && age < NEW_WINDOW_MS;
 }
 
 function parseCSV(text){
@@ -241,12 +243,18 @@ function getDepClass(from){
   return '';
 }
 
-function parseDateTime(row){
+function parseDateTime(row, field='출발시간'){
   const d=(row['날짜']||'').trim();
-  const t=(row['출발시간']||'').trim();
+  const t=(row[field]||'').trim();
   if(!d || !t) return null;
   const dt = new Date(`${d}T${t}:00`);
   return isNaN(dt) ? null : dt;
+}
+
+function isPastArrival(row){
+  const arr = parseDateTime(row, '도착시간');
+  if(!arr) return false;
+  return arr.getTime() < Date.now();
 }
 
 function updateSummary(sortedRows){
@@ -361,7 +369,9 @@ async function load(){
   const lines=parseCSV(txt).filter(r=>r.some(x=>x&&x.trim()));
   const header=lines[0]||[];
   const sourceRows=lines.slice(1).map(r=>Object.fromEntries(header.map((h,i)=>[h,r[i]||''])));
-  all=sourceRows.filter(r => (r['날짜']||'').trim() || (r['출발역']||'').trim() || (r['도착역']||'').trim() || (r['좌석']||'').trim());
+  all=sourceRows
+    .filter(r => (r['날짜']||'').trim() || (r['출발역']||'').trim() || (r['도착역']||'').trim() || (r['좌석']||'').trim())
+    .filter(r => !isPastArrival(r));
   applySort();
 }
 
